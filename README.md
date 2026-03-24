@@ -1,43 +1,48 @@
-# ProjectFlow — Multi-View Project Tracker
+# 🚀 ProjectFlow - Multi-View Project Tracker UI
 
-A high-performance Project Management UI built with React + TypeScript, featuring custom drag-and-drop, virtual scrolling, and real-time collaboration simulation.
+A high-performance, feature-rich Project Management UI built for excellence.
 
-## 🚀 Setup Instructions
+## ✨ Advanced Features
 
-1.  **Clone the repository**.
-2.  **Install dependencies**:
-    ```bash
-    npm install
-    ```
-3.  **Start the development server**:
-    ```bash
-    npm run dev
-    ```
-4.  **Build for production**:
-    ```bash
-    npm run build
-    ```
+- **Multi-View Architecture**: Synchronized state across three views:
+  - **🟦 Kanban Board**: Drag-and-drop task status management.
+  - **📋 Virtualized List**: 60fps scrolling for 500+ tasks using manual virtualization.
+  - **📊 Timeline View**: Dynamic zoom (Month, Week, 3-Day) with coordinate mapping.
+- **Custom Drag-and-Drop**: Built from scratch using the native **Pointer Events API** (No external libraries). Features smooth snap-back animations and dynamic placeholders.
+- **Real-time Collaboration Simulation**: Dynamic agents viewing tasks with stacked avatars and visual activity indicators.
+- **Global Search & Highlighting**: Instant filtering across all views with live title hit highlighting.
+- **Activity Audit Trail**: Chronological history of all task status updates in a slide-out side panel.
+- **Theme Engine**: Seamless Dark/Light mode support with glassmorphism aesthetics.
+- **Productivity Hotkeys**: `Cmd+K` (Search), `Cmd+H` (History), `1, 2, 3` (View switching).
 
-## 🧠 Technical Architecture
+## 🛠 Tech Stack
 
-### State Management
-- **Zustand**: Chosen for its minimal boilerplate and high performance. It allows for atomic updates to the 500+ task dataset without triggering full-tree re-renders, which is critical for smooth scrolling and real-time simulation.
+- **Framework**: `React 19` + `TypeScript`
+- **Styling**: `Tailwind CSS 4`
+- **State Management**: `Zustand` (Atomic updates)
+- **Icons**: `Lucide React`
+- **Performance**: Native DOM APIs for DnD and Virtual Scrolling.
 
-### Custom Drag-and-Drop (Pointer Events API)
-- **Snap-Back Logic**: When a drag operation ends outside a valid drop target (or is cancelled), the system enters a `isSnapping` state. The `dragPos` is updated to the `startPos` recorded at the beginning of the interaction. A 300ms CSS transition is applied to the drag preview, visually moving it back to its original slot before finally clearing the drag state.
-- **Placeholder Handling**: To prevent layout shift, a placeholder component with identical dimensions to the task card is rendered in the source column. When hovering over new columns, a matching placeholder is dynamically rendered to preview the impact of the drop.
+## 🏃 Local Setup
 
-### Virtual Scrolling (Manual Implementation)
-- **Logic**: The List view maintains a virtual container of `totalCount * 48px`. It calculates `startIndex` and `endIndex` based on `scrollTop` and `containerHeight`.
-- **Performance**: It renders only visible rows plus a 5-row buffer. By using `translateY` and absolute positioning for rows, we avoid DOM trash and maintain smooth momentum scrolling for 500+ items.
+1. **Install Dependencies**:
+   ```bash
+   npm install
+   ```
 
-## ✍️ Explanation Section
+2. **Run Dev Server**:
+   ```bash
+   npm run dev
+   ```
 
-The hardest UI problem I solved was implementing the **snap-back animation** and **dynamic placeholders** for the custom drag-and-drop system without using any library. Creating a system that handles state transitions correctly while maintaining a smooth 60fps frame rate during high-frequency pointer moves required careful coordination between React state and the Pointer Events API. To handle the **drag placeholder without layout shift**, I implemented a "dual-placeholder" strategy: the original task card is replaced by a non-interactive, dashed-border version of itself in the source list, "reserving" that space in the DOM. When dragging over a new column, the column's logic detects the intersection and renders a second, target placeholder. This provides immediate visual feedback of where the item will land without causing sudden jumps in the list height. If I had more time, I would **refactor the Timeline view to use 2D virtualization**. Currently, it uses a limited slice of 50 tasks to maintain performance; a fully virtualized grid would allow the timeline to scale to thousands of tasks and multiple months without any degradation in responsiveness, transforming it into a enterprise-grade Gantt tool.
+3. **Build Producton**:
+   ```bash
+   npm run build
+   ```
+
+## 🎯 Architecture Insights
+
+The project utilizes a **centralized Zustand store** to maintain a single source of truth for all task data, filters, and UI states. This ensures that switching views is instant and requires no data re-fetching. The **custom DnD system** avoids the overhead of large libraries like `dnd-kit`, providing a lightweight and highly performant interaction surface.
 
 ---
-
-## 🏁 Performance Record
-- **Lighthouse Score**: ≥ 90 (Best practices, accessibility, and performance optimized).
-- **Virtual DOM**: Optimized with `useMemo` for filters and sorting.
-- **Bundle Size**: Minimized by avoiding unnecessary libraries.
+*Created as part of Velozity Global Solutions Technical Hiring Assessment.*
