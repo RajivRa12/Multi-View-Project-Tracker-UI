@@ -1,0 +1,1243 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ProjectFlow — Task Tracker</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Syne:wght@400;500;600;700;800&family=DM+Sans:ital,wght@0,300;0,400;0,500;1,300&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg: #0a0a0f;
+  --bg2: #111118;
+  --bg3: #18181f;
+  --bg4: #1e1e28;
+  --border: #2a2a38;
+  --border2: #333345;
+  --text: #e8e8f0;
+  --text2: #9090a8;
+  --text3: #5a5a72;
+  --accent: #6c63ff;
+  --accent2: #8b85ff;
+  --accent-glow: rgba(108,99,255,0.15);
+  --red: #ff4d6d;
+  --orange: #ff8c42;
+  --yellow: #ffd166;
+  --green: #06d6a0;
+  --blue: #4cc9f0;
+  --critical: #ff4d6d;
+  --high: #ff8c42;
+  --medium: #ffd166;
+  --low: #06d6a0;
+  --radius: 8px;
+  --radius2: 12px;
+  --col-todo: #4cc9f0;
+  --col-inprog: #6c63ff;
+  --col-review: #ffd166;
+  --col-done: #06d6a0;
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+  font-family: 'DM Sans', sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  min-height: 100vh;
+  overflow-x: hidden;
+}
+
+/* TOPBAR */
+.topbar {
+  position: fixed; top: 0; left: 0; right: 0; z-index: 100;
+  height: 56px;
+  background: rgba(10,10,15,0.92);
+  backdrop-filter: blur(12px);
+  border-bottom: 1px solid var(--border);
+  display: flex; align-items: center; gap: 0;
+  padding: 0 20px;
+}
+
+.topbar-logo {
+  font-family: 'Syne', sans-serif;
+  font-weight: 800;
+  font-size: 18px;
+  letter-spacing: -0.5px;
+  color: var(--text);
+  margin-right: 32px;
+  display: flex; align-items: center; gap: 8px;
+}
+.topbar-logo span { color: var(--accent); }
+
+.topbar-views { display: flex; gap: 2px; }
+.view-btn {
+  padding: 6px 14px;
+  border-radius: 6px;
+  border: none;
+  background: transparent;
+  color: var(--text2);
+  font-family: 'DM Sans', sans-serif;
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.15s;
+  display: flex; align-items: center; gap: 6px;
+}
+.view-btn:hover { background: var(--bg3); color: var(--text); }
+.view-btn.active { background: var(--bg4); color: var(--text); }
+.view-btn svg { width:14px; height:14px; }
+
+.topbar-right { margin-left: auto; display: flex; align-items: center; gap: 12px; }
+.collab-bar { display: flex; align-items: center; gap: 8px; }
+.collab-text { font-size: 12px; color: var(--text2); font-family: 'DM Mono', monospace; }
+.collab-dot { width: 6px; height: 6px; border-radius: 50%; background: var(--green); animation: pulse 2s infinite; }
+@keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.5} }
+.avatars-stack { display: flex; }
+.avatar-sm {
+  width: 28px; height: 28px; border-radius: 50%;
+  border: 2px solid var(--bg);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 10px; font-weight: 700;
+  margin-left: -6px;
+  font-family: 'DM Mono', monospace;
+  transition: transform 0.3s;
+  position: relative;
+}
+.avatar-sm:first-child { margin-left: 0; }
+.avatar-sm:hover { transform: translateY(-2px) scale(1.1); z-index: 10; }
+
+/* FILTERS BAR */
+.filters-bar {
+  position: fixed; top: 56px; left: 0; right: 0; z-index: 99;
+  background: var(--bg2);
+  border-bottom: 1px solid var(--border);
+  padding: 10px 20px;
+  display: flex; align-items: center; gap: 10px;
+  flex-wrap: wrap;
+}
+.filter-group { display: flex; align-items: center; gap: 6px; }
+.filter-label { font-size: 11px; color: var(--text3); font-family: 'DM Mono', monospace; text-transform: uppercase; letter-spacing: 0.5px; }
+
+.filter-chip {
+  padding: 4px 10px;
+  border-radius: 20px;
+  border: 1px solid var(--border2);
+  background: var(--bg3);
+  color: var(--text2);
+  font-size: 12px;
+  cursor: pointer;
+  transition: all 0.15s;
+  white-space: nowrap;
+  font-family: 'DM Sans', sans-serif;
+}
+.filter-chip:hover { border-color: var(--accent); color: var(--text); }
+.filter-chip.active { border-color: var(--accent); background: var(--accent-glow); color: var(--accent2); }
+
+.date-input {
+  background: var(--bg3);
+  border: 1px solid var(--border2);
+  color: var(--text2);
+  border-radius: 6px;
+  padding: 4px 8px;
+  font-size: 12px;
+  font-family: 'DM Sans', sans-serif;
+  outline: none;
+}
+.date-input:focus { border-color: var(--accent); }
+
+.clear-btn {
+  padding: 4px 12px;
+  border-radius: 20px;
+  border: 1px solid var(--red);
+  background: rgba(255,77,109,0.08);
+  color: var(--red);
+  font-size: 12px;
+  cursor: pointer;
+  transition: all 0.15s;
+  font-family: 'DM Sans', sans-serif;
+}
+.clear-btn:hover { background: rgba(255,77,109,0.16); }
+
+/* MAIN CONTENT */
+.main {
+  margin-top: 112px;
+  padding: 20px;
+  min-height: calc(100vh - 112px);
+}
+
+/* ===================== KANBAN ===================== */
+.kanban {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 16px;
+  height: calc(100vh - 152px);
+  min-height: 500px;
+}
+
+.kanban-col {
+  background: var(--bg2);
+  border: 1px solid var(--border);
+  border-radius: var(--radius2);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  transition: border-color 0.2s;
+}
+.kanban-col.drag-over {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 1px var(--accent), inset 0 0 20px var(--accent-glow);
+}
+
+.col-header {
+  padding: 14px 16px;
+  display: flex; align-items: center; gap: 10px;
+  border-bottom: 1px solid var(--border);
+  flex-shrink: 0;
+}
+.col-dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
+.col-title { font-family: 'Syne', sans-serif; font-weight: 700; font-size: 13px; letter-spacing: 0.3px; }
+.col-count {
+  margin-left: auto;
+  background: var(--bg3);
+  color: var(--text3);
+  font-size: 11px;
+  font-family: 'DM Mono', monospace;
+  padding: 2px 7px;
+  border-radius: 10px;
+}
+
+.col-cards {
+  flex: 1;
+  overflow-y: auto;
+  padding: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  scrollbar-width: thin;
+  scrollbar-color: var(--border2) transparent;
+}
+
+.col-empty {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  color: var(--text3);
+  font-size: 13px;
+}
+.col-empty svg { opacity: 0.3; }
+
+/* TASK CARD */
+.task-card {
+  background: var(--bg3);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 12px;
+  cursor: grab;
+  transition: all 0.15s;
+  position: relative;
+  user-select: none;
+}
+.task-card:hover {
+  border-color: var(--border2);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 16px rgba(0,0,0,0.3);
+}
+.task-card.dragging {
+  opacity: 0.4;
+  cursor: grabbing;
+}
+.task-card.drag-preview {
+  position: fixed;
+  z-index: 9999;
+  pointer-events: none;
+  opacity: 0.95;
+  box-shadow: 0 8px 32px rgba(0,0,0,0.5), 0 0 0 1px var(--accent);
+  transform: rotate(2deg) scale(1.02);
+  width: 240px;
+}
+
+.drag-placeholder {
+  border: 2px dashed var(--border2);
+  border-radius: var(--radius);
+  background: var(--accent-glow);
+  height: 80px;
+  flex-shrink: 0;
+}
+
+.card-priority {
+  display: inline-flex; align-items: center; gap: 4px;
+  font-size: 10px; font-family: 'DM Mono', monospace; text-transform: uppercase; letter-spacing: 0.5px;
+  padding: 2px 7px;
+  border-radius: 4px;
+  margin-bottom: 8px;
+  font-weight: 500;
+}
+.card-title {
+  font-size: 13px;
+  font-weight: 500;
+  line-height: 1.4;
+  margin-bottom: 10px;
+  color: var(--text);
+}
+.card-footer {
+  display: flex; align-items: center; justify-content: space-between;
+  gap: 8px;
+}
+.card-due {
+  font-size: 11px;
+  font-family: 'DM Mono', monospace;
+  color: var(--text3);
+}
+.card-due.overdue { color: var(--red); }
+.card-due.due-today { color: var(--yellow); }
+.card-assignees { display: flex; }
+.card-avatar {
+  width: 22px; height: 22px; border-radius: 50%;
+  border: 1.5px solid var(--bg3);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 9px; font-weight: 700;
+  margin-left: -4px;
+  font-family: 'DM Mono', monospace;
+  transition: transform 0.3s;
+}
+.card-avatar:first-child { margin-left: 0; }
+.card-avatar.collab-active {
+  border-color: var(--accent);
+  box-shadow: 0 0 6px var(--accent);
+}
+
+/* Priority colors */
+.p-critical { background: rgba(255,77,109,0.12); color: var(--critical); border: 1px solid rgba(255,77,109,0.2); }
+.p-high { background: rgba(255,140,66,0.12); color: var(--high); border: 1px solid rgba(255,140,66,0.2); }
+.p-medium { background: rgba(255,209,102,0.12); color: var(--medium); border: 1px solid rgba(255,209,102,0.2); }
+.p-low { background: rgba(6,214,160,0.12); color: var(--low); border: 1px solid rgba(6,214,160,0.2); }
+
+/* ===================== LIST VIEW ===================== */
+.list-view { height: calc(100vh - 152px); display: flex; flex-direction: column; }
+.list-table-wrap {
+  flex: 1; overflow: hidden; position: relative;
+  background: var(--bg2);
+  border: 1px solid var(--border);
+  border-radius: var(--radius2);
+}
+.list-header {
+  display: grid;
+  grid-template-columns: 2fr 100px 90px 90px 120px 120px;
+  background: var(--bg3);
+  border-bottom: 1px solid var(--border);
+  position: sticky; top: 0; z-index: 10;
+  border-radius: var(--radius2) var(--radius2) 0 0;
+}
+.list-th {
+  padding: 10px 14px;
+  font-size: 11px;
+  font-family: 'DM Mono', monospace;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: var(--text3);
+  cursor: pointer;
+  display: flex; align-items: center; gap: 4px;
+  user-select: none;
+  transition: color 0.15s;
+}
+.list-th:hover { color: var(--text2); }
+.list-th.sort-active { color: var(--accent2); }
+.sort-arrow { font-size: 10px; }
+
+.virtual-scroll-container {
+  overflow-y: auto;
+  scrollbar-width: thin;
+  scrollbar-color: var(--border2) transparent;
+  height: calc(100% - 41px);
+  position: relative;
+}
+.virtual-scroll-inner { position: relative; }
+.virtual-rows-visible { position: absolute; left: 0; right: 0; top: 0; }
+
+.list-row {
+  display: grid;
+  grid-template-columns: 2fr 100px 90px 90px 120px 120px;
+  border-bottom: 1px solid var(--border);
+  align-items: center;
+  transition: background 0.1s;
+  height: 48px;
+}
+.list-row:hover { background: var(--bg3); }
+.list-td {
+  padding: 0 14px;
+  font-size: 13px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.list-td.title { font-weight: 500; }
+
+.status-select {
+  background: var(--bg4);
+  border: 1px solid var(--border2);
+  color: var(--text2);
+  border-radius: 5px;
+  padding: 3px 6px;
+  font-size: 11px;
+  font-family: 'DM Sans', sans-serif;
+  cursor: pointer;
+  outline: none;
+  width: 100%;
+  transition: border-color 0.15s;
+}
+.status-select:hover, .status-select:focus { border-color: var(--accent); color: var(--text); }
+
+/* ===================== TIMELINE ===================== */
+.timeline-view { height: calc(100vh - 152px); display: flex; flex-direction: column; gap: 0; overflow: hidden; }
+.timeline-header-wrap {
+  background: var(--bg2);
+  border: 1px solid var(--border);
+  border-bottom: none;
+  border-radius: var(--radius2) var(--radius2) 0 0;
+  overflow: hidden;
+}
+.timeline-body-wrap {
+  flex: 1;
+  background: var(--bg2);
+  border: 1px solid var(--border);
+  border-top: none;
+  border-radius: 0 0 var(--radius2) var(--radius2);
+  overflow-x: auto;
+  overflow-y: auto;
+  scrollbar-width: thin;
+  scrollbar-color: var(--border2) transparent;
+  position: relative;
+}
+
+.tl-grid {
+  position: relative;
+  min-width: max-content;
+}
+
+.tl-days-header {
+  display: flex;
+  height: 40px;
+  align-items: center;
+  border-bottom: 1px solid var(--border);
+  position: sticky;
+  top: 0;
+  background: var(--bg2);
+  z-index: 5;
+}
+.tl-label-col {
+  width: 200px;
+  min-width: 200px;
+  padding: 0 14px;
+  font-size: 11px;
+  color: var(--text3);
+  font-family: 'DM Mono', monospace;
+  border-right: 1px solid var(--border);
+  position: sticky;
+  left: 0;
+  background: var(--bg3);
+  z-index: 6;
+  height: 40px;
+  display: flex;
+  align-items: center;
+}
+.tl-day-cells { display: flex; }
+.tl-day-cell {
+  width: 36px; min-width: 36px;
+  font-size: 10px;
+  font-family: 'DM Mono', monospace;
+  color: var(--text3);
+  text-align: center;
+  border-right: 1px solid rgba(42,42,56,0.5);
+  height: 40px;
+  display: flex; align-items: center; justify-content: center;
+  flex-direction: column;
+  gap: 1px;
+}
+.tl-day-cell.today { background: rgba(108,99,255,0.08); color: var(--accent2); }
+.tl-day-num { font-size: 12px; font-weight: 500; }
+.tl-day-name { font-size: 9px; opacity: 0.6; }
+
+.tl-row {
+  display: flex;
+  height: 40px;
+  align-items: center;
+  border-bottom: 1px solid var(--border);
+  position: relative;
+}
+.tl-row:hover { background: rgba(255,255,255,0.02); }
+.tl-row-label {
+  width: 200px; min-width: 200px;
+  padding: 0 14px;
+  font-size: 12px;
+  color: var(--text2);
+  border-right: 1px solid var(--border);
+  position: sticky; left: 0;
+  background: var(--bg2);
+  z-index: 4;
+  height: 40px;
+  display: flex; align-items: center;
+  overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+  gap: 6px;
+}
+.tl-row-label:hover { background: var(--bg3); }
+.tl-bars-area { position: relative; display: flex; align-items: center; height: 40px; }
+.tl-bar {
+  position: absolute;
+  height: 22px;
+  border-radius: 4px;
+  top: 9px;
+  font-size: 10px;
+  font-family: 'DM Mono', monospace;
+  display: flex; align-items: center;
+  padding: 0 6px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  transition: filter 0.15s, transform 0.15s;
+  cursor: pointer;
+  z-index: 2;
+}
+.tl-bar:hover { filter: brightness(1.2); transform: scaleY(1.1); z-index: 3; }
+.tl-today-line {
+  position: absolute;
+  top: 0; bottom: 0;
+  width: 2px;
+  background: var(--accent);
+  opacity: 0.7;
+  z-index: 3;
+  pointer-events: none;
+}
+.tl-today-label {
+  position: absolute;
+  top: -18px;
+  font-size: 9px;
+  font-family: 'DM Mono', monospace;
+  color: var(--accent2);
+  transform: translateX(-50%);
+}
+
+/* NO RESULTS */
+.no-results {
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+  gap: 12px; height: 200px; color: var(--text3);
+}
+.no-results-icon { font-size: 32px; opacity: 0.4; }
+.no-results-text { font-size: 14px; }
+
+/* SCROLLBAR STYLES */
+::-webkit-scrollbar { width: 6px; height: 6px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: var(--border2); border-radius: 3px; }
+::-webkit-scrollbar-thumb:hover { background: var(--text3); }
+
+/* Animations */
+@keyframes fadeInUp { from { opacity:0; transform:translateY(8px); } to { opacity:1; transform:translateY(0); } }
+.anim-in { animation: fadeInUp 0.2s ease forwards; }
+
+/* Avatar colors */
+.av0{background:#6c63ff} .av1{background:#ff4d6d} .av2{background:#06d6a0} .av3{background:#ffd166} .av4{background:#4cc9f0} .av5{background:#ff8c42}
+.av0,.av1,.av2,.av3,.av4,.av5 { color: #fff; }
+</style>
+</head>
+<body>
+
+<!-- TOPBAR -->
+<div class="topbar">
+  <div class="topbar-logo">
+    <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
+      <rect width="8" height="8" rx="2" fill="#6c63ff"/>
+      <rect x="11" width="9" height="9" rx="2" fill="#4cc9f0" opacity="0.8"/>
+      <rect y="11" width="9" height="9" rx="2" fill="#06d6a0" opacity="0.8"/>
+      <rect x="12" y="12" width="8" height="8" rx="2" fill="#ff4d6d" opacity="0.6"/>
+    </svg>
+    Project<span>Flow</span>
+  </div>
+  <div class="topbar-views">
+    <button class="view-btn active" id="btn-kanban" onclick="switchView('kanban')">
+      <svg viewBox="0 0 14 14" fill="none" xmlns="http://www.w3.org/2000/svg"><rect x="0" y="0" width="3.5" height="14" rx="1" fill="currentColor"/><rect x="5" y="0" width="3.5" height="14" rx="1" fill="currentColor" opacity=".6"/><rect x="10.5" y="0" width="3.5" height="14" rx="1" fill="currentColor" opacity=".3"/></svg>
+      Kanban
+    </button>
+    <button class="view-btn" id="btn-list" onclick="switchView('list')">
+      <svg viewBox="0 0 14 14" fill="none" xmlns="http://www.w3.org/2000/svg"><rect y="1" width="14" height="2" rx="1" fill="currentColor"/><rect y="6" width="14" height="2" rx="1" fill="currentColor" opacity=".7"/><rect y="11" width="14" height="2" rx="1" fill="currentColor" opacity=".4"/></svg>
+      List
+    </button>
+    <button class="view-btn" id="btn-timeline" onclick="switchView('timeline')">
+      <svg viewBox="0 0 14 14" fill="none" xmlns="http://www.w3.org/2000/svg"><rect y="2" width="8" height="2.5" rx="1.25" fill="currentColor"/><rect x="4" y="6" width="10" height="2.5" rx="1.25" fill="currentColor" opacity=".7"/><rect x="1" y="10" width="6" height="2.5" rx="1.25" fill="currentColor" opacity=".4"/></svg>
+      Timeline
+    </button>
+  </div>
+  <div class="topbar-right">
+    <div class="collab-bar">
+      <div class="collab-dot"></div>
+      <span class="collab-text" id="collab-count">3 viewing</span>
+    </div>
+    <div class="avatars-stack" id="topbar-avatars"></div>
+  </div>
+</div>
+
+<!-- FILTERS BAR -->
+<div class="filters-bar" id="filters-bar">
+  <span class="filter-label">Status</span>
+  <div class="filter-group" id="status-filters">
+    <button class="filter-chip" data-filter="status" data-val="todo" onclick="toggleFilter(this)">To Do</button>
+    <button class="filter-chip" data-filter="status" data-val="inprogress" onclick="toggleFilter(this)">In Progress</button>
+    <button class="filter-chip" data-filter="status" data-val="inreview" onclick="toggleFilter(this)">In Review</button>
+    <button class="filter-chip" data-filter="status" data-val="done" onclick="toggleFilter(this)">Done</button>
+  </div>
+  <span class="filter-label" style="margin-left:8px">Priority</span>
+  <div class="filter-group" id="priority-filters">
+    <button class="filter-chip" data-filter="priority" data-val="critical" onclick="toggleFilter(this)">Critical</button>
+    <button class="filter-chip" data-filter="priority" data-val="high" onclick="toggleFilter(this)">High</button>
+    <button class="filter-chip" data-filter="priority" data-val="medium" onclick="toggleFilter(this)">Medium</button>
+    <button class="filter-chip" data-filter="priority" data-val="low" onclick="toggleFilter(this)">Low</button>
+  </div>
+  <span class="filter-label" style="margin-left:8px">Assignee</span>
+  <div class="filter-group" id="assignee-filters"></div>
+  <span class="filter-label" style="margin-left:8px">Due</span>
+  <input type="date" class="date-input" id="date-from" onchange="updateDateFilter()">
+  <span style="color:var(--text3);font-size:12px">→</span>
+  <input type="date" class="date-input" id="date-to" onchange="updateDateFilter()">
+  <button class="clear-btn" id="clear-btn" style="display:none" onclick="clearFilters()">✕ Clear Filters</button>
+</div>
+
+<!-- MAIN -->
+<div class="main" id="main-content">
+  <!-- Views rendered here -->
+</div>
+
+<!-- DRAG PREVIEW -->
+<div class="task-card drag-preview" id="drag-preview" style="display:none"></div>
+
+<script>
+// ===================== DATA GENERATION =====================
+const USERS = [
+  { id: 'u0', name: 'Alex Rivera', initials: 'AR' },
+  { id: 'u1', name: 'Sam Chen', initials: 'SC' },
+  { id: 'u2', name: 'Jordan Lee', initials: 'JL' },
+  { id: 'u3', name: 'Taylor Kim', initials: 'TK' },
+  { id: 'u4', name: 'Morgan Wu', initials: 'MW' },
+  { id: 'u5', name: 'Casey Park', initials: 'CP' },
+];
+const STATUSES = ['todo','inprogress','inreview','done'];
+const PRIORITIES = ['critical','high','medium','low'];
+const STATUS_LABELS = { todo:'To Do', inprogress:'In Progress', inreview:'In Review', done:'Done' };
+const PRIORITY_LABELS = { critical:'Critical', high:'High', medium:'Medium', low:'Low' };
+const TASK_NAMES = [
+  'Implement authentication flow','Design onboarding screens','Fix payment gateway bug','Optimize database queries',
+  'Write API documentation','Set up CI/CD pipeline','Create user dashboard','Refactor legacy codebase',
+  'Add dark mode support','Implement search functionality','Fix mobile responsiveness','Update dependencies',
+  'Create admin panel','Add export feature','Implement notifications','Write unit tests',
+  'Performance audit','Accessibility improvements','SEO optimization','Implement caching layer',
+  'Add rate limiting','Create email templates','Build analytics dashboard','Implement OAuth',
+  'Add webhook support','Create data migration','Fix memory leak','Implement lazy loading',
+  'Add error tracking','Create backup system','Implement file upload','Add audit logging',
+  'Build reporting feature','Implement versioning','Create API gateway','Add monitoring',
+  'Implement feature flags','Build billing system','Add multi-tenancy','Create SDK',
+];
+
+function randomDate(daysOffset) {
+  const d = new Date();
+  d.setDate(d.getDate() + (Math.random() * daysOffset * 2 - daysOffset));
+  return d.toISOString().split('T')[0];
+}
+
+function generateTasks(n=520) {
+  const tasks = [];
+  for (let i = 0; i < n; i++) {
+    const startDate = randomDate(30);
+    const dueDate = randomDate(14);
+    tasks.push({
+      id: 't' + i,
+      title: TASK_NAMES[i % TASK_NAMES.length] + (i >= TASK_NAMES.length ? ` v${Math.floor(i/TASK_NAMES.length)+1}` : ''),
+      status: STATUSES[Math.floor(Math.random() * STATUSES.length)],
+      priority: PRIORITIES[Math.floor(Math.random() * PRIORITIES.length)],
+      assignee: USERS[Math.floor(Math.random() * USERS.length)].id,
+      startDate,
+      dueDate,
+      collabUser: null,
+    });
+  }
+  return tasks;
+}
+
+// ===================== STATE =====================
+let state = {
+  tasks: generateTasks(),
+  view: 'kanban',
+  filters: { status: [], priority: [], assignee: [], dateFrom: '', dateTo: '' },
+  sort: { field: 'title', dir: 'asc' },
+  collabUsers: [],
+  dragState: null,
+};
+
+function getFiltered() {
+  const f = state.filters;
+  return state.tasks.filter(t => {
+    if (f.status.length && !f.status.includes(t.status)) return false;
+    if (f.priority.length && !f.priority.includes(t.priority)) return false;
+    if (f.assignee.length && !f.assignee.includes(t.assignee)) return false;
+    if (f.dateFrom && t.dueDate && t.dueDate < f.dateFrom) return false;
+    if (f.dateTo && t.dueDate && t.dueDate > f.dateTo) return false;
+    return true;
+  });
+}
+
+function hasFilters() {
+  const f = state.filters;
+  return f.status.length || f.priority.length || f.assignee.length || f.dateFrom || f.dateTo;
+}
+
+// ===================== URL SYNC =====================
+function syncToURL() {
+  const p = new URLSearchParams();
+  const f = state.filters;
+  if (f.status.length) p.set('status', f.status.join(','));
+  if (f.priority.length) p.set('priority', f.priority.join(','));
+  if (f.assignee.length) p.set('assignee', f.assignee.join(','));
+  if (f.dateFrom) p.set('from', f.dateFrom);
+  if (f.dateTo) p.set('to', f.dateTo);
+  p.set('view', state.view);
+  const qs = p.toString();
+  history.pushState({}, '', qs ? '?' + qs : window.location.pathname);
+}
+
+function loadFromURL() {
+  const p = new URLSearchParams(window.location.search);
+  const s = p.get('status'); if(s) state.filters.status = s.split(',');
+  const pr = p.get('priority'); if(pr) state.filters.priority = pr.split(',');
+  const as = p.get('assignee'); if(as) state.filters.assignee = as.split(',');
+  state.filters.dateFrom = p.get('from') || '';
+  state.filters.dateTo = p.get('to') || '';
+  const v = p.get('view'); if(v && STATUSES.indexOf(v)<0) state.view = v || 'kanban';
+}
+
+window.addEventListener('popstate', () => { loadFromURL(); render(); syncFilterUI(); });
+
+// ===================== FILTER LOGIC =====================
+function toggleFilter(btn) {
+  const field = btn.dataset.filter;
+  const val = btn.dataset.val;
+  const arr = state.filters[field];
+  const idx = arr.indexOf(val);
+  if (idx >= 0) arr.splice(idx, 1); else arr.push(val);
+  btn.classList.toggle('active', arr.includes(val));
+  syncToURL();
+  render();
+  toggleClearBtn();
+}
+
+function updateDateFilter() {
+  state.filters.dateFrom = document.getElementById('date-from').value;
+  state.filters.dateTo = document.getElementById('date-to').value;
+  syncToURL();
+  render();
+  toggleClearBtn();
+}
+
+function clearFilters() {
+  state.filters = { status: [], priority: [], assignee: [], dateFrom: '', dateTo: '' };
+  syncFilterUI();
+  syncToURL();
+  render();
+  toggleClearBtn();
+}
+
+function toggleClearBtn() {
+  document.getElementById('clear-btn').style.display = hasFilters() ? 'inline-flex' : 'none';
+}
+
+function syncFilterUI() {
+  document.querySelectorAll('.filter-chip').forEach(btn => {
+    const field = btn.dataset.filter;
+    const val = btn.dataset.val;
+    btn.classList.toggle('active', state.filters[field] && state.filters[field].includes(val));
+  });
+  document.getElementById('date-from').value = state.filters.dateFrom || '';
+  document.getElementById('date-to').value = state.filters.dateTo || '';
+  toggleClearBtn();
+}
+
+// Build assignee filters
+function buildAssigneeFilters() {
+  const container = document.getElementById('assignee-filters');
+  container.innerHTML = USERS.map(u => `
+    <button class="filter-chip" data-filter="assignee" data-val="${u.id}" onclick="toggleFilter(this)">${u.initials}</button>
+  `).join('');
+}
+
+// ===================== DATE UTILS =====================
+function today() { return new Date().toISOString().split('T')[0]; }
+function diffDays(dateStr) {
+  const t = new Date(today()); const d = new Date(dateStr);
+  return Math.round((d - t) / 86400000);
+}
+function dueDateLabel(dateStr) {
+  if (!dateStr) return '';
+  const diff = diffDays(dateStr);
+  if (diff === 0) return { label: 'Due Today', cls: 'due-today' };
+  if (diff < 0) {
+    const days = Math.abs(diff);
+    if (days > 7) return { label: `${days}d overdue`, cls: 'overdue' };
+    return { label: `${days}d ago`, cls: 'overdue' };
+  }
+  return { label: dateStr, cls: '' };
+}
+function fmtDate(d) {
+  if (!d) return '';
+  const dt = new Date(d + 'T00:00:00');
+  return dt.toLocaleDateString('en-US', { month:'short', day:'numeric' });
+}
+
+// ===================== AVATAR HELPERS =====================
+function avatarHTML(userId, size='sm', extra='') {
+  const u = USERS.find(x=>x.id===userId);
+  if (!u) return '';
+  const idx = USERS.indexOf(u);
+  return `<div class="card-avatar av${idx} ${extra}" title="${u.name}">${u.initials}</div>`;
+}
+
+// ===================== COLLABORATION SIMULATION =====================
+const COLLAB_AVATARS_POOL = [0,1,2,3,4,5];
+let collabInterval;
+
+function initCollab() {
+  // 3 random users "online"
+  state.collabUsers = [0,1,2].map(i => ({ userId: 'u'+i, taskId: null }));
+  updateCollabUI();
+  collabInterval = setInterval(moveCollabUsers, 2800);
+}
+
+function moveCollabUsers() {
+  const filtered = getFiltered();
+  if (!filtered.length) return;
+  state.collabUsers.forEach(cu => {
+    const t = filtered[Math.floor(Math.random() * filtered.length)];
+    // clear old
+    state.tasks.forEach(task => { if (task.collabUser === cu.userId) task.collabUser = null; });
+    const task = state.tasks.find(x=>x.id===t.id);
+    if (task) task.collabUser = cu.userId;
+    cu.taskId = t.id;
+  });
+  updateCollabUI();
+  if (state.view === 'kanban') renderKanban();
+}
+
+function updateCollabUI() {
+  const n = state.collabUsers.length;
+  document.getElementById('collab-count').textContent = n + ' viewing';
+  const avatarsEl = document.getElementById('topbar-avatars');
+  avatarsEl.innerHTML = state.collabUsers.slice(0,3).map(cu => {
+    const idx = parseInt(cu.userId.replace('u',''));
+    const u = USERS[idx];
+    return `<div class="avatar-sm av${idx}" title="${u.name}">${u.initials}</div>`;
+  }).join('');
+}
+
+// ===================== VIEW SWITCHING =====================
+function switchView(v) {
+  state.view = v;
+  document.querySelectorAll('.view-btn').forEach(b => b.classList.remove('active'));
+  document.getElementById('btn-'+v).classList.add('active');
+  syncToURL();
+  render();
+}
+
+// ===================== MAIN RENDER =====================
+function render() {
+  if (state.view === 'kanban') renderKanban();
+  else if (state.view === 'list') renderList();
+  else if (state.view === 'timeline') renderTimeline();
+}
+
+// ===================== KANBAN RENDER =====================
+function renderKanban() {
+  const filtered = getFiltered();
+  const byStatus = { todo:[], inprogress:[], inreview:[], done:[] };
+  filtered.forEach(t => { if (byStatus[t.status]) byStatus[t.status].push(t); });
+  const colColors = { todo:'var(--col-todo)', inprogress:'var(--col-inprog)', inreview:'var(--col-review)', done:'var(--col-done)' };
+
+  const main = document.getElementById('main-content');
+  main.innerHTML = `<div class="kanban" id="kanban-board">${
+    STATUSES.map(s => {
+      const tasks = byStatus[s];
+      return `<div class="kanban-col" id="col-${s}" data-status="${s}"
+        ondragover="onColDragOver(event,'${s}')"
+        ondragleave="onColDragLeave(event,'${s}')"
+        ondrop="onColDrop(event,'${s}')">
+        <div class="col-header">
+          <div class="col-dot" style="background:${colColors[s]}"></div>
+          <span class="col-title">${STATUS_LABELS[s]}</span>
+          <span class="col-count">${tasks.length}</span>
+        </div>
+        <div class="col-cards" id="cards-${s}">
+          ${tasks.length === 0
+            ? `<div class="col-empty"><svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="3" y="3" width="18" height="18" rx="3"/><path d="M9 12h6m-3-3v6"/></svg><span>Drop tasks here</span></div>`
+            : tasks.map(t => renderCard(t, s)).join('')
+          }
+        </div>
+      </div>`;
+    }).join('')
+  }</div>`;
+
+  // Attach drag events
+  main.querySelectorAll('.task-card[data-id]').forEach(el => {
+    el.setAttribute('draggable', 'true');
+    el.addEventListener('dragstart', onDragStart);
+    el.addEventListener('dragend', onDragEnd);
+    el.addEventListener('touchstart', onTouchStart, { passive: false });
+  });
+}
+
+function renderCard(task, status) {
+  const due = dueDateLabel(task.dueDate);
+  const collabUser = task.collabUser ? USERS.find(u=>u.id===task.collabUser) : null;
+  const uIdx = USERS.findIndex(u=>u.id===task.assignee);
+  const pLabel = PRIORITY_LABELS[task.priority];
+  return `<div class="task-card anim-in" data-id="${task.id}" data-status="${status}">
+    <div class="card-priority p-${task.priority}">● ${pLabel}</div>
+    <div class="card-title">${task.title}</div>
+    <div class="card-footer">
+      <span class="card-due ${due.cls}">${due.label ? fmtDate(task.dueDate) : ''}</span>
+      <div style="display:flex;gap:4px;align-items:center">
+        ${due.cls === 'overdue' ? `<span class="card-due overdue" style="font-size:10px">⚠ ${due.label}</span>` : ''}
+        ${due.cls === 'due-today' ? `<span class="card-due due-today" style="font-size:10px">Today</span>` : ''}
+      </div>
+      <div class="card-assignees">
+        <div class="card-avatar av${uIdx}" title="${USERS[uIdx].name}">${USERS[uIdx].initials}</div>
+        ${collabUser ? `<div class="card-avatar av${USERS.indexOf(collabUser)} collab-active" title="${collabUser.name} (viewing)">${collabUser.initials}</div>` : ''}
+      </div>
+    </div>
+  </div>`;
+}
+
+// ===================== DRAG AND DROP =====================
+let dragTaskId = null;
+let dragSourceStatus = null;
+let dragPlaceholder = null;
+let dragPreviewEl = null;
+
+function onDragStart(e) {
+  dragTaskId = e.currentTarget.dataset.id;
+  dragSourceStatus = e.currentTarget.dataset.status;
+  e.currentTarget.classList.add('dragging');
+  // Create placeholder
+  dragPlaceholder = document.createElement('div');
+  dragPlaceholder.className = 'drag-placeholder';
+  e.currentTarget.parentNode.insertBefore(dragPlaceholder, e.currentTarget.nextSibling);
+  e.dataTransfer.effectAllowed = 'move';
+  e.dataTransfer.setData('text/plain', dragTaskId);
+}
+
+function onDragEnd(e) {
+  e.currentTarget.classList.remove('dragging');
+  if (dragPlaceholder) { dragPlaceholder.remove(); dragPlaceholder = null; }
+  document.querySelectorAll('.kanban-col').forEach(col => col.classList.remove('drag-over'));
+  dragTaskId = null;
+  dragSourceStatus = null;
+}
+
+function onColDragOver(e, status) {
+  e.preventDefault();
+  e.dataTransfer.dropEffect = 'move';
+  document.getElementById('col-' + status).classList.add('drag-over');
+}
+
+function onColDragLeave(e, status) {
+  if (!e.currentTarget.contains(e.relatedTarget)) {
+    document.getElementById('col-' + status).classList.remove('drag-over');
+  }
+}
+
+function onColDrop(e, status) {
+  e.preventDefault();
+  document.getElementById('col-' + status).classList.remove('drag-over');
+  if (!dragTaskId) return;
+  const task = state.tasks.find(t => t.id === dragTaskId);
+  if (task) { task.status = status; }
+  if (dragPlaceholder) { dragPlaceholder.remove(); dragPlaceholder = null; }
+  renderKanban();
+}
+
+// TOUCH DRAG
+let touchCard = null;
+let touchOffsetX = 0, touchOffsetY = 0;
+let preview = document.getElementById('drag-preview');
+
+function onTouchStart(e) {
+  const card = e.currentTarget;
+  touchCard = card;
+  dragTaskId = card.dataset.id;
+  dragSourceStatus = card.dataset.status;
+  const rect = card.getBoundingClientRect();
+  const touch = e.touches[0];
+  touchOffsetX = touch.clientX - rect.left;
+  touchOffsetY = touch.clientY - rect.top;
+  preview.innerHTML = card.innerHTML;
+  preview.style.display = 'block';
+  preview.style.width = rect.width + 'px';
+  preview.style.left = (touch.clientX - touchOffsetX) + 'px';
+  preview.style.top = (touch.clientY - touchOffsetY) + 'px';
+  card.classList.add('dragging');
+  document.addEventListener('touchmove', onTouchMove, { passive: false });
+  document.addEventListener('touchend', onTouchEnd);
+}
+
+function onTouchMove(e) {
+  e.preventDefault();
+  const touch = e.touches[0];
+  preview.style.left = (touch.clientX - touchOffsetX) + 'px';
+  preview.style.top = (touch.clientY - touchOffsetY) + 'px';
+  // Highlight drop zone
+  document.querySelectorAll('.kanban-col').forEach(col => {
+    const r = col.getBoundingClientRect();
+    if (touch.clientX >= r.left && touch.clientX <= r.right && touch.clientY >= r.top && touch.clientY <= r.bottom) {
+      col.classList.add('drag-over');
+    } else {
+      col.classList.remove('drag-over');
+    }
+  });
+}
+
+function onTouchEnd(e) {
+  preview.style.display = 'none';
+  document.removeEventListener('touchmove', onTouchMove);
+  document.removeEventListener('touchend', onTouchEnd);
+  if (touchCard) touchCard.classList.remove('dragging');
+  document.querySelectorAll('.kanban-col').forEach(col => {
+    if (col.classList.contains('drag-over')) {
+      const status = col.dataset.status;
+      const task = state.tasks.find(t => t.id === dragTaskId);
+      if (task) task.status = status;
+      col.classList.remove('drag-over');
+    }
+  });
+  dragTaskId = null;
+  renderKanban();
+}
+
+// ===================== LIST VIEW =====================
+const ROW_HEIGHT = 48;
+const BUFFER = 5;
+let listScrollTop = 0;
+let listContainerHeight = 0;
+let listScrollContainer = null;
+
+function renderList() {
+  const filtered = getSortedFiltered();
+  const main = document.getElementById('main-content');
+  main.innerHTML = `<div class="list-view">
+    <div class="list-table-wrap">
+      <div class="list-header">
+        ${thCell('title','Title')}
+        ${thCell('status','Status')}
+        ${thCell('priority','Priority')}
+        ${thCell('assignee','Assignee')}
+        ${thCell('dueDate','Due Date')}
+        <div class="list-th" style="cursor:default">Actions</div>
+      </div>
+      <div class="virtual-scroll-container" id="vs-container">
+        <div class="virtual-scroll-inner" id="vs-inner">
+          <div class="virtual-rows-visible" id="vs-rows"></div>
+        </div>
+      </div>
+    </div>
+  </div>`;
+
+  listScrollContainer = document.getElementById('vs-container');
+  listContainerHeight = listScrollContainer.clientHeight;
+
+  // Set total height
+  document.getElementById('vs-inner').style.height = (filtered.length * ROW_HEIGHT) + 'px';
+
+  renderVisibleRows(filtered, 0);
+
+  listScrollContainer.addEventListener('scroll', () => {
+    listScrollTop = listScrollContainer.scrollTop;
+    renderVisibleRows(filtered, listScrollTop);
+  }, { passive: true });
+
+  // Restore scroll position if same view
+}
+
+function thCell(field, label) {
+  const active = state.sort.field === field;
+  const arrow = active ? (state.sort.dir === 'asc' ? '↑' : '↓') : '';
+  return `<div class="list-th ${active ? 'sort-active' : ''}" onclick="setSort('${field}')">
+    ${label} ${active ? `<span class="sort-arrow">${arrow}</span>` : ''}
+  </div>`;
+}
+
+function setSort(field) {
+  if (state.sort.field === field) {
+    state.sort.dir = state.sort.dir === 'asc' ? 'desc' : 'asc';
+  } else {
+    state.sort.field = field;
+    state.sort.dir = 'asc';
+  }
+  renderList();
+}
+
+const PRIORITY_ORDER = { critical:0, high:1, medium:2, low:3 };
+function getSortedFiltered() {
+  const filtered = getFiltered();
+  const { field, dir } = state.sort;
+  const sign = dir === 'asc' ? 1 : -1;
+  return [...filtered].sort((a,b) => {
+    if (field === 'title') return sign * a.title.localeCompare(b.title);
+    if (field === 'priority') return sign * (PRIORITY_ORDER[a.priority] - PRIORITY_ORDER[b.priority]);
+    if (field === 'dueDate') return sign * ((a.dueDate||'').localeCompare(b.dueDate||''));
+    if (field === 'status') return sign * a.status.localeCompare(b.status);
+    if (field === 'assignee') return sign * a.assignee.localeCompare(b.assignee);
+    return 0;
+  });
+}
+
+function renderVisibleRows(tasks, scrollTop) {
+  if (!tasks.length) {
+    document.getElementById('vs-rows').innerHTML = `<div class="no-results" style="height:200px">
+      <div class="no-results-icon">⚡</div>
+      <div class="no-results-text">No tasks match filters</div>
+      <button class="clear-btn" onclick="clearFilters()">Clear Filters</button>
+    </div>`;
+    return;
+  }
+
+  const containerH = document.getElementById('vs-container').clientHeight || 400;
+  const start = Math.max(0, Math.floor(scrollTop / ROW_HEIGHT) - BUFFER);
+  const end = Math.min(tasks.length - 1, Math.ceil((scrollTop + containerH) / ROW_HEIGHT) + BUFFER);
+
+  const rowsEl = document.getElementById('vs-rows');
+  rowsEl.style.top = (start * ROW_HEIGHT) + 'px';
+
+  rowsEl.innerHTML = tasks.slice(start, end + 1).map((t, i) => {
+    const uIdx = USERS.findIndex(u=>u.id===t.assignee);
+    const due = dueDateLabel(t.dueDate);
+    return `<div class="list-row" style="height:${ROW_HEIGHT}px" data-id="${t.id}">
+      <div class="list-td title">${t.title}</div>
+      <div class="list-td">
+        <select class="status-select" onchange="updateTaskStatus('${t.id}',this.value)">
+          ${STATUSES.map(s=>`<option value="${s}" ${t.status===s?'selected':''}>${STATUS_LABELS[s]}</option>`).join('')}
+        </select>
+      </div>
+      <div class="list-td"><span class="card-priority p-${t.priority}" style="font-size:10px">${PRIORITY_LABELS[t.priority]}</span></div>
+      <div class="list-td"><div style="display:flex;align-items:center;gap:6px"><div class="card-avatar av${uIdx}" style="width:20px;height:20px;font-size:8px">${USERS[uIdx].initials}</div><span style="font-size:12px;color:var(--text2)">${USERS[uIdx].name.split(' ')[0]}</span></div></div>
+      <div class="list-td"><span class="card-due ${due.cls}">${due.label || fmtDate(t.dueDate)}</span></div>
+      <div class="list-td" style="color:var(--text3);font-size:12px;font-family:'DM Mono',monospace">${t.dueDate||'—'}</div>
+    </div>`;
+  }).join('');
+}
+
+function updateTaskStatus(id, newStatus) {
+  const task = state.tasks.find(t=>t.id===id);
+  if (task) task.status = newStatus;
+}
+
+// ===================== TIMELINE VIEW =====================
+function renderTimeline() {
+  const main = document.getElementById('main-content');
+  const now = new Date();
+  const year = now.getFullYear();
+  const month = now.getMonth();
+  const daysInMonth = new Date(year, month+1, 0).getDate();
+  const todayDate = now.getDate();
+  const monthName = now.toLocaleString('default', { month:'long', year:'numeric' });
+  const DAY_W = 36;
+
+  const filtered = getFiltered();
+
+  main.innerHTML = `<div class="timeline-view">
+    <div class="timeline-header-wrap">
+      <div style="padding:10px 14px;border-bottom:1px solid var(--border);font-family:'Syne',sans-serif;font-weight:700;font-size:13px;color:var(--text2)">${monthName}</div>
+    </div>
+    <div class="timeline-body-wrap" id="tl-body">
+      <div class="tl-grid" id="tl-grid" style="width:${200 + daysInMonth*DAY_W}px">
+        <!-- header row -->
+        <div class="tl-days-header">
+          <div class="tl-label-col">Task</div>
+          <div class="tl-day-cells">${
+            Array.from({length:daysInMonth},(_,i)=>{
+              const d = i+1;
+              const date = new Date(year,month,d);
+              const dayName = date.toLocaleDateString('en-US',{weekday:'short'}).slice(0,1);
+              const isToday = d === todayDate;
+              return `<div class="tl-day-cell ${isToday?'today':''}" style="width:${DAY_W}px">
+                <span class="tl-day-num">${d}</span>
+                <span class="tl-day-name">${dayName}</span>
+              </div>`;
+            }).join('')
+          }</div>
+        </div>
+        <!-- task rows -->
+        <div id="tl-rows">
+        ${filtered.length === 0 ? `<div class="no-results" style="height:200px">
+          <div class="no-results-icon">📅</div>
+          <div class="no-results-text">No tasks match filters</div>
+          <button class="clear-btn" onclick="clearFilters()">Clear Filters</button>
+        </div>` : filtered.slice(0, 200).map(t => {
+          const uIdx = USERS.findIndex(u=>u.id===t.assignee);
+          // Parse dates relative to current month
+          const startD = t.startDate ? new Date(t.startDate + 'T00:00:00') : null;
+          const endD = t.dueDate ? new Date(t.dueDate + 'T00:00:00') : null;
+
+          let barLeft = 0, barWidth = DAY_W;
+          let hasBar = false;
+
+          if (endD) {
+            const startInMonth = startD
+              ? Math.max(1, Math.min(daysInMonth, startD.getMonth()===month&&startD.getFullYear()===year ? startD.getDate() : (startD < new Date(year,month,1) ? 1 : daysInMonth+1)))
+              : (endD.getMonth()===month&&endD.getFullYear()===year ? endD.getDate() : null);
+            const endInMonth = endD.getMonth()===month&&endD.getFullYear()===year ? endD.getDate() : (endD > new Date(year,month,daysInMonth) ? daysInMonth : null);
+
+            if (endInMonth !== null) {
+              const s = startInMonth || endInMonth;
+              barLeft = (s - 1) * DAY_W;
+              barWidth = Math.max(DAY_W, (endInMonth - s + 1) * DAY_W);
+              hasBar = true;
+            }
+          }
+
+          const barColors = { critical:'rgba(255,77,109,0.75)', high:'rgba(255,140,66,0.75)', medium:'rgba(255,209,102,0.75)', low:'rgba(6,214,160,0.75)' };
+          const barTextColors = { critical:'#ff4d6d', high:'#ff8c42', medium:'#c89f00', low:'#06d6a0' };
+
+          return `<div class="tl-row">
+            <div class="tl-row-label">
+              <div class="card-avatar av${uIdx}" style="width:18px;height:18px;font-size:7px;flex-shrink:0">${USERS[uIdx].initials}</div>
+              <span style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${t.title}</span>
+            </div>
+            <div class="tl-bars-area" style="width:${daysInMonth*DAY_W}px;position:relative">
+              ${/* today line */`<div class="tl-today-line" style="left:${(todayDate-1)*DAY_W + DAY_W/2}px"></div>`}
+              ${hasBar ? `<div class="tl-bar" style="left:${barLeft}px;width:${barWidth}px;background:${barColors[t.priority]};color:${barTextColors[t.priority]};font-size:9px"
+                title="${t.title}">
+                ${barWidth > 60 ? t.title.slice(0,20) + (t.title.length>20?'...':'') : ''}
+              </div>` : `<div style="position:absolute;left:${(todayDate-0.5)*DAY_W}px;top:50%;transform:translate(-50%,-50%);width:8px;height:8px;border-radius:50%;background:${barColors[t.priority]};opacity:0.6" title="No date range"></div>`}
+            </div>
+          </div>`;
+        }).join('')}
+        </div>
+      </div>
+    </div>
+  </div>`;
+
+  if (filtered.length > 200) {
+    document.getElementById('tl-rows').insertAdjacentHTML('beforeend',
+      `<div style="text-align:center;padding:12px;color:var(--text3);font-size:12px;font-family:'DM Mono',monospace">+ ${filtered.length-200} more tasks (apply filters to narrow down)</div>`);
+  }
+
+  // Scroll to today
+  const body = document.getElementById('tl-body');
+  if (body) {
+    body.scrollLeft = Math.max(0, (todayDate - 5) * DAY_W);
+  }
+}
+
+// ===================== INIT =====================
+loadFromURL();
+buildAssigneeFilters();
+syncFilterUI();
+render();
+initCollab();
+</script>
+</body>
+</html>
